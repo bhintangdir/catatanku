@@ -17,28 +17,14 @@ export default function RegisterPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  // Registration disabled by redirecting to login
+  if (typeof window !== 'undefined') {
+    window.location.href = '/login';
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        }
-      }
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-    } else {
-      setSuccess(true);
-      setLoading(false);
-    }
+    return;
   };
 
   if (success) {

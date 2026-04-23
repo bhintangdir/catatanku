@@ -44,12 +44,7 @@ export default function LoginPage() {
           <h2 className="text-center text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
             Masuk ke Akun Anda
           </h2>
-          <p className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-400">
-            Atau{' '}
-            <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              daftar akun baru di sini
-            </Link>
-          </p>
+          {/* Registration link removed as per user request to disable registration */}
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
