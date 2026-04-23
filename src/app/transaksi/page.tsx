@@ -76,21 +76,6 @@ export default function TransaksiPage() {
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
 
 
-  const handleProductSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value;
-    setPProductId(id);
-    const prod = products.find(p => p.id === id);
-    if (prod) setPPrice(prod.price * Number(p_qty));
-  };
-
-  const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const qty = e.target.value.replace(/,/g, '.').replace(/[^0-9.]/g, '');
-    setPQty(qty);
-    const prod = products.find(p => p.id === p_productId);
-    if (prod) setPPrice(prod.price * Number(qty));
-  };
-
-
   const submitKeuangan = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -132,7 +117,7 @@ export default function TransaksiPage() {
         profile_id: userId,
         product_id: p_productId, 
         quantity: Number(p_qty), 
-        price: Number(p_price), 
+        price: Number(p_price) * Number(p_qty), 
         shipping_cost: Number(p_shipping || 0),
         is_attached: p_isAttached,
         notes: p_notes,
@@ -146,7 +131,7 @@ export default function TransaksiPage() {
         const prod = products.find(p => p.id === p_productId);
         const { data: finData } = await supabase.from('financial_reports').select('balance').order('date', { ascending: false }).order('created_at', { ascending: false }).limit(1);
         const lastBalance = finData && finData.length > 0 ? finData[0].balance : 0;
-        const totalDebit = Number(p_price) + Number(p_shipping || 0);
+        const totalDebit = (Number(p_price) * Number(p_qty)) + Number(p_shipping || 0);
         const newBalance = lastBalance + totalDebit;
 
         await supabase.from('financial_reports').insert([{
@@ -340,7 +325,7 @@ export default function TransaksiPage() {
                                   type="button"
                                   onClick={() => {
                                     setPProductId(p.id);
-                                    setPPrice(p.price * Number(p_qty));
+                                    setPPrice(p.price);
                                     setProductDropdownOpen(false);
                                   }}
                                   className="w-full text-left px-3 py-2.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 dark:text-zinc-100 transition-colors border-b border-zinc-50 dark:border-zinc-800/50 last:border-0"
@@ -399,8 +384,8 @@ export default function TransaksiPage() {
 
                   <div className="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800">
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-zinc-500 dark:text-zinc-400">Harga Produk x {p_qty}</span>
-                      <span className="font-medium text-zinc-900 dark:text-zinc-100">Rp {Number(p_price).toLocaleString('id-ID')}</span>
+                      <span className="text-zinc-500 dark:text-zinc-400">Harga Satuan x {p_qty}</span>
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100">Rp {(Number(p_price) * Number(p_qty)).toLocaleString('id-ID')}</span>
                     </div>
                     <div className="flex justify-between text-sm mb-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
                       <span className="text-zinc-500 dark:text-zinc-400">Ongkos Kirim</span>
@@ -408,7 +393,7 @@ export default function TransaksiPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Total Pemasukan</span>
-                      <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">Rp {(Number(p_price) + Number(p_shipping || 0)).toLocaleString('id-ID')}</span>
+                      <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">Rp {( (Number(p_price) * Number(p_qty)) + Number(p_shipping || 0) ).toLocaleString('id-ID')}</span>
                     </div>
                   </div>
                   <div>
