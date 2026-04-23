@@ -226,11 +226,11 @@ export default function LaporanPenjualan() {
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">Memuat data...</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">Memuat data...</td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-zinc-500">
                     Belum ada data penjualan
                   </td>
                 </tr>
