@@ -26,13 +26,13 @@ export default function DashboardPage() {
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
     const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).toISOString().split('T')[0];
 
-    // Fetch Last Balance
-    const { data: finData } = await supabase.from('financial_reports').select('balance').order('date', { ascending: false }).order('created_at', { ascending: false }).limit(1);
-    const balance = finData && finData.length > 0 ? finData[0].balance : 0;
+    // Fetch Total Balance (Net of all debits - credits)
+    const { data: finStats } = await supabase.from('financial_reports').select('debit, credit');
+    const balance = finStats?.reduce((acc, curr) => acc + Number(curr.debit) - Number(curr.credit), 0) || 0;
 
     // Fetch Monthly Sales
-    const { data: salesData } = await supabase.from('sales_reports').select('price, date, products(name)').gte('date', firstDay).lte('date', lastDay);
-    const thisMonthSales = salesData?.reduce((acc, curr) => acc + Number(curr.price), 0) || 0;
+    const { data: salesData } = await supabase.from('sales_reports').select('price, shipping_cost, date, products(name)').gte('date', firstDay).lte('date', lastDay);
+    const thisMonthSales = salesData?.reduce((acc, curr) => acc + (Number(curr.price) + Number(curr.shipping_cost || 0)), 0) || 0;
 
     // Fetch Monthly Expenses
     const { data: expData } = await supabase.from('expenses').select('price, date, product_name').gte('date', firstDay).lte('date', lastDay);
@@ -55,7 +55,7 @@ export default function DashboardPage() {
     if (salesData) {
       salesData.forEach(sale => {
         if (chartMap.has(sale.date)) {
-          chartMap.get(sale.date).total += Number(sale.price);
+          chartMap.get(sale.date).total += (Number(sale.price) + Number(sale.shipping_cost || 0));
         }
       });
     }
@@ -65,7 +65,7 @@ export default function DashboardPage() {
     // Combine recent activities
     const combined: any[] = [];
     if (salesData) {
-      salesData.map((s: any) => combined.push({ type: 'Penjualan', title: s.products?.name || 'Produk', amount: s.price, date: s.date, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' }));
+      salesData.map((s: any) => combined.push({ type: 'Penjualan', title: s.products?.name || 'Produk', amount: (Number(s.price) + Number(s.shipping_cost || 0)), date: s.date, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' }));
     }
     if (expData) {
       expData.map(e => combined.push({ type: 'Pengeluaran', title: e.product_name, amount: e.price, date: e.date, icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-500/10' }));

@@ -79,13 +79,19 @@ export default function UnduhLaporan() {
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Tanggal', 'Keterangan', 'Debit', 'Kredit', 'Saldo Akhir']],
-          body: financialReports.map(item => [
-            format(new Date(item.date), 'dd MMM yyyy', { locale: id }),
-            item.description,
-            item.debit > 0 ? `+ Rp\n${item.debit.toLocaleString('id-ID')}` : '-',
-            item.credit > 0 ? `- Rp\n${item.credit.toLocaleString('id-ID')}` : '-',
-            `Rp\n${item.balance.toLocaleString('id-ID')}`
-          ]),
+          body: (() => {
+            let runningBalance = 0;
+            return financialReports.map(item => {
+              runningBalance += (Number(item.debit || 0) - Number(item.credit || 0));
+              return [
+                format(new Date(item.date), 'dd MMM yyyy', { locale: id }),
+                item.description,
+                item.debit > 0 ? `+ Rp\n${item.debit.toLocaleString('id-ID')}` : '-',
+                item.credit > 0 ? `- Rp\n${item.credit.toLocaleString('id-ID')}` : '-',
+                `Rp\n${runningBalance.toLocaleString('id-ID')}`
+              ];
+            });
+          })(),
           theme: 'grid',
           headStyles: { fillColor: [79, 70, 229] },
           styles: { fontSize: 9 }
@@ -111,7 +117,7 @@ export default function UnduhLaporan() {
             format(new Date(item.date), 'dd MMM yyyy', { locale: id }),
             item.products?.name || 'Produk Dihapus',
             item.quantity.toString(),
-            `Rp\n${item.price.toLocaleString('id-ID')}`
+            `Rp\n${(Number(item.price) + Number(item.shipping_cost || 0)).toLocaleString('id-ID')}`
           ]),
           theme: 'grid',
           headStyles: { fillColor: [16, 185, 129] },

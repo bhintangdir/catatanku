@@ -132,7 +132,7 @@ export default function LaporanKeuangan() {
 
   const totalDebit = data.reduce((acc, curr) => acc + curr.debit, 0);
   const totalCredit = data.reduce((acc, curr) => acc + curr.credit, 0);
-  const currentBalance = data.length > 0 ? data[data.length - 1].balance : 0;
+  const currentBalance = totalDebit - totalCredit;
 
   const downloadCSV = () => {
     const headers = ['Tanggal', 'Deskripsi', 'Debit', 'Kredit', 'Saldo', 'Catatan', 'Lampiran'];
@@ -252,54 +252,61 @@ export default function LaporanKeuangan() {
                   </td>
                 </tr>
               ) : (
-                data.map((row) => (
-                  <tr key={row.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">{format(new Date(row.date), 'dd MMM yyyy')}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-zinc-900 dark:text-zinc-100">{row.description}</p>
-                    </td>
-                    <td className="px-6 py-4 text-right text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">
-                      {row.debit > 0 ? `+ Rp ${row.debit.toLocaleString('id-ID')}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-right text-red-600 dark:text-red-400 whitespace-nowrap">
-                      {row.credit > 0 ? `- Rp ${row.credit.toLocaleString('id-ID')}` : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-right font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
-                      Rp {row.balance.toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
-                      {row.notes || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {row.is_attached ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
-                          <FileText className="h-3 w-3" />
-                          Ya
-                        </span>
-                      ) : (
-                        <span className="text-zinc-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => { 
-                          setEditingData(row); 
-                          setEditDesc(row.description); 
-                          setEditDebit(row.debit); 
-                          setEditCredit(row.credit); 
-                          setEditNotes(row.notes);
-                          setEditDate(row.date);
-                          setEditIsAttached(row.is_attached);
-                        }} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors dark:text-indigo-400 dark:hover:bg-indigo-500/10">
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button onClick={() => setDeleteId(row.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors dark:text-red-400 dark:hover:bg-red-500/10">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                data.map((row, index) => {
+                  let runningBalance = 0;
+                  for(let i=0; i<=index; i++) {
+                    runningBalance += (data[i].debit - data[i].credit);
+                  }
+                  
+                  return (
+                    <tr key={row.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">{format(new Date(row.date), 'dd MMM yyyy')}</td>
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-zinc-900 dark:text-zinc-100">{row.description}</p>
+                      </td>
+                      <td className="px-6 py-4 text-right text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">
+                        {row.debit > 0 ? `+ Rp ${row.debit.toLocaleString('id-ID')}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-right text-red-600 dark:text-red-400 whitespace-nowrap">
+                        {row.credit > 0 ? `- Rp ${row.credit.toLocaleString('id-ID')}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-right font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+                        Rp {runningBalance.toLocaleString('id-ID')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-zinc-500 dark:text-zinc-400">
+                        {row.notes || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {row.is_attached ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20">
+                            <FileText className="h-3 w-3" />
+                            Ya
+                          </span>
+                        ) : (
+                          <span className="text-zinc-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => { 
+                            setEditingData(row); 
+                            setEditDesc(row.description); 
+                            setEditDebit(row.debit); 
+                            setEditCredit(row.credit); 
+                            setEditNotes(row.notes);
+                            setEditDate(row.date);
+                            setEditIsAttached(row.is_attached);
+                          }} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors dark:text-indigo-400 dark:hover:bg-indigo-500/10">
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button onClick={() => setDeleteId(row.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors dark:text-red-400 dark:hover:bg-red-500/10">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
