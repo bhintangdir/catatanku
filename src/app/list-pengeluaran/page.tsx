@@ -32,8 +32,6 @@ export default function ListPengeluaran() {
   const [cPrice, setCPrice] = useState<string | number>(0);
   const [cNotes, setCNotes] = useState('');
   const [cIsAttached, setCIsAttached] = useState(false);
-  const [syncKeuangan, setSyncKeuangan] = useState(true);
-
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Edit State
@@ -95,27 +93,6 @@ export default function ListPengeluaran() {
       }]).select();
 
       if (error) throw error;
-      const newExpenseId = expData?.[0]?.id;
-
-      if (syncKeuangan) {
-        const { data: finData } = await supabase.from('financial_reports').select('balance').order('date', { ascending: false }).order('created_at', { ascending: false }).limit(1);
-        const lastBalance = finData && finData.length > 0 ? finData[0].balance : 0;
-        const newBalance = lastBalance - Number(cPrice);
-
-        const { error: finError } = await supabase.from('financial_reports').insert([{
-           profile_id: userId,
-           date: cDate,
-           description: `Beli: ${cName}`,
-           debit: 0,
-           credit: Number(cPrice),
-           balance: newBalance,
-           notes: cNotes || 'Otomatis dari List Pengeluaran',
-           is_attached: cIsAttached,
-           source_id: newExpenseId
-        }]);
-        if (finError) throw finError;
-      }
-      
       setCName(''); setCQty(1); setCUnit(''); setCPrice(0); setCNotes(''); setCIsAttached(false); 
       setShowCreateModal(false);
       setSuccessMsg('Data pengeluaran berhasil dicatat!');
@@ -135,16 +112,6 @@ export default function ListPengeluaran() {
       .eq('id', editingData.id);
 
     if (!error) {
-       // Sync update to financial reports
-       await supabase
-         .from('financial_reports')
-         .update({ 
-           credit: Number(editPrice),
-           description: `Beli: ${editName}`,
-           notes: editNotes || 'Otomatis dari List Pengeluaran'
-         })
-         .eq('source_id', editingData.id);
-
        setEditingData(null);
        fetchData();
     } else {
@@ -371,12 +338,6 @@ export default function ListPengeluaran() {
                     <input type="checkbox" id="cIsAttached" checked={cIsAttached} onChange={e => setCIsAttached(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950" />
                     <label htmlFor="cIsAttached" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
                       Terlampir
-                    </label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="syncK" checked={syncKeuangan} onChange={e => setSyncKeuangan(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950" />
-                    <label htmlFor="syncK" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
-                      Sinkronkan ke Kas
                     </label>
                   </div>
                 </div>

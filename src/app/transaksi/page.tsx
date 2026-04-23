@@ -68,10 +68,6 @@ export default function TransaksiPage() {
   const [e_notes, setENotes] = useState('');
   const [e_isAttached, setEIsAttached] = useState(false);
 
-  // Sync Toggle States
-  const [syncSales, setSyncSales] = useState(true);
-  const [syncExpense, setSyncExpense] = useState(true);
-
   // Focus States
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
 
@@ -125,27 +121,6 @@ export default function TransaksiPage() {
       }]).select();
 
       if (saleError) throw saleError;
-      const newSaleId = saleData?.[0]?.id;
-
-      if (syncSales) {
-        const prod = products.find(p => p.id === p_productId);
-        const { data: finData } = await supabase.from('financial_reports').select('balance').order('date', { ascending: false }).order('created_at', { ascending: false }).limit(1);
-        const lastBalance = finData && finData.length > 0 ? finData[0].balance : 0;
-        const totalDebit = (Number(p_price) * Number(p_qty)) + Number(p_shipping || 0);
-        const newBalance = lastBalance + totalDebit;
-
-        await supabase.from('financial_reports').insert([{
-           profile_id: userId,
-           date: p_date,
-           description: `Penjualan: ${prod?.name || 'Produk'} (Qty: ${p_qty})${Number(p_shipping) > 0 ? ' + Ongkir' : ''}`,
-           debit: totalDebit,
-           credit: 0,
-           balance: newBalance,
-           notes: p_notes || 'Otomatis dari Penjualan',
-           is_attached: p_isAttached,
-           source_id: newSaleId
-        }]);
-      }
 
       setSuccessMsg('Transaksi penjualan berhasil dicatat dan disinkronkan!');
       closeModal();
@@ -174,25 +149,6 @@ export default function TransaksiPage() {
       }]).select();
 
       if (error) throw error;
-      const newExpenseId = data?.[0]?.id;
-
-      if (syncExpense) {
-        const { data: finData } = await supabase.from('financial_reports').select('balance').order('date', { ascending: false }).order('created_at', { ascending: false }).limit(1);
-        const lastBalance = finData && finData.length > 0 ? finData[0].balance : 0;
-        const newBalance = lastBalance - Number(e_price);
-
-        await supabase.from('financial_reports').insert([{
-           profile_id: userId,
-           date: e_date,
-           description: `Beli: ${e_name}`,
-           debit: 0,
-           credit: Number(e_price),
-           balance: newBalance,
-           notes: e_notes || 'Otomatis dari Pengeluaran',
-           is_attached: e_isAttached,
-           source_id: newExpenseId
-        }]);
-      }
 
       setSuccessMsg('Pengeluaran operasional berhasil dicatat!');
       closeModal();
@@ -407,12 +363,6 @@ export default function TransaksiPage() {
                         Terlampir
                       </label>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="syncSales" checked={syncSales} onChange={e => setSyncSales(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500 dark:border-zinc-700 dark:bg-zinc-950" />
-                      <label htmlFor="syncSales" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
-                        Sinkronkan ke Kas
-                      </label>
-                    </div>
                   </div>
                   <div className="pt-4 flex justify-end gap-3 border-t border-zinc-100 dark:border-zinc-800">
                     <button type="button" onClick={closeModal} className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100">Batal</button>
@@ -477,12 +427,6 @@ export default function TransaksiPage() {
                       <input type="checkbox" id="eIsAttached" checked={e_isAttached} onChange={e => setEIsAttached(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-red-600 focus:ring-red-500 dark:border-zinc-700 dark:bg-zinc-950" />
                       <label htmlFor="eIsAttached" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
                         Terlampir
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="syncExpense" checked={syncExpense} onChange={e => setSyncExpense(e.target.checked)} className="h-4 w-4 rounded border-zinc-300 text-red-600 focus:ring-red-500 dark:border-zinc-700 dark:bg-zinc-950" />
-                      <label htmlFor="syncExpense" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
-                        Sinkronkan ke Kas
                       </label>
                     </div>
                   </div>

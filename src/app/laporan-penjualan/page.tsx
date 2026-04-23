@@ -92,13 +92,13 @@ export default function LaporanPenjualan() {
     e.preventDefault();
     if (!cProductId) return alert('Silakan pilih produk terlebih dahulu');
     
-    const { error } = await supabase.from('sales_reports').insert([{
+    const { data: saleData, error } = await supabase.from('sales_reports').insert([{
       profile_id: userId,
       product_id: cProductId,
       quantity: cQty,
       price: cPrice,
       date: cDate
-    }]);
+    }]).select();
 
     if (!error) {
       setCProductId(''); setCQty(1); setCPrice(0); 
@@ -119,18 +119,6 @@ export default function LaporanPenjualan() {
       .eq('id', editingData.id);
 
     if (!error) {
-      // Sync update to financial reports
-      const totalDebit = Number(editPrice) + Number(editShipping);
-      const prodName = editingData.products?.name || 'Produk';
-      await supabase
-        .from('financial_reports')
-        .update({ 
-          debit: totalDebit,
-          description: `Penjualan: ${prodName} (Qty: ${editQty})${Number(editShipping) > 0 ? ' + Ongkir' : ''}`,
-          notes: editNotes || 'Otomatis dari Penjualan'
-        })
-        .eq('source_id', editingData.id);
-
       setEditingData(null);
       fetchData();
     } else {
